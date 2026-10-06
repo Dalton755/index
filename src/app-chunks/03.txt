@@ -1,0 +1,43 @@
+werCase().includes(query.toLowerCase())
+    if (!matches) return false
+    if (filter === 'orcamento') return ['rascunho','orcamento','aguardando_aprovacao'].includes(o.status)
+    if (filter === 'running') return ['aprovada','agendada','em_deslocamento','em_execucao','pausada'].includes(o.status)
+    if (filter === 'done') return o.status === 'concluida'
+    return true
+  }), [data.orders, customerNames, query, filter])
+  return <section className="page-section"><div className="page-heading"><div><span>OPERAÇÃO</span><h1>Ordens de Serviço</h1></div><button className="square-add" onClick={onNew}><Icon name="plus"/></button></div><label className="search"><Icon name="search"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por cliente, OS ou serviço"/></label><div className="filter-row"><button className={filter==='all'?'selected':''} onClick={()=>setFilter('all')}>Todas</button><button className={filter==='orcamento'?'selected':''} onClick={()=>setFilter('orcamento')}>Orçamentos</button><button className={filter==='running'?'selected':''} onClick={()=>setFilter('running')}>Em andamento</button><button className={filter==='done'?'selected':''} onClick={()=>setFilter('done')}>Concluídas</button></div>{visible.length ? <div className="stack">{visible.map(o => <OrderCard key={o.id} order={o} customerName={customerNames.get(o.cliente_id) ?? 'Cliente'} onOpen={() => onOpen(o.id)}/>)}</div> : <EmptyState title="Nenhuma OS encontrada" text="Crie sua primeira ordem de serviço ou ajuste os filtros."/>}</section>
+}
+
+function Customers({ data, orderTotals, onNew }: { data: AppData; orderTotals: Map<string, { count: number; total: number }>; onNew: () => void }) {
+  const [query, setQuery] = useState('')
+  const visible = data.customers.filter(c => `${c.nome} ${c.telefone ?? ''} ${c.email ?? ''}`.toLowerCase().includes(query.toLowerCase()))
+  return <section className="page-section"><div className="page-heading"><div><span>RELACIONAMENTO</span><h1>Clientes</h1></div><button className="square-add" onClick={onNew}><Icon name="plus"/></button></div><label className="search"><Icon name="search"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar cliente"/></label>{visible.length ? <div className="customer-list">{visible.map(c => { const stats = orderTotals.get(c.id) ?? {count:0,total:0}; return <article className="customer-card" key={c.id}><div className="avatar">{c.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase()}</div><div className="customer-info"><strong>{c.nome}</strong><span>{c.whatsapp || c.telefone || 'Sem telefone'}</span><small>{stats.count} OS • {money.format(stats.total)} em serviços</small></div><Icon className="chevron" name="chevron"/></article> })}</div> : <EmptyState title="Nenhum cliente cadastrado" text="Cadastre o primeiro cliente para começar sua operação."/>}</section>
+}
+
+function Agenda({ data, customerNames, onOpen }: { data: AppData; customerNames: Map<string,string>; onOpen: (id: string) => void }) {
+  const [offset, setOffset] = useState(0)
+  const days = Array.from({length:5},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()+i+offset); return d })
+  const [selectedKey, setSelectedKey] = useState(localDateKey(new Date()))
+  const selectedOrders = data.orders.filter(o => o.agendado_inicio && localDateKey(o.agendado_inicio) === selectedKey)
+  return <section className="page-section"><div className="page-heading"><div><span>PLANEJAMENTO</span><h1>Agenda</h1></div><button className="square-add" onClick={()=>setOffset(offset+5)}><Icon name="chevron"/></button></div><div className="date-strip">{days.map(d => { const key=localDateKey(d); return <button className={key===selectedKey?'selected':''} key={key} onClick={()=>setSelectedKey(key)}>{new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(d).replace('.','')}<strong>{String(d.getDate()).padStart(2,'0')}</strong></button> })}</div><div className="agenda-day"><span>{selectedKey===localDateKey(new Date())?'HOJE':'AGENDA'}</span><h2>{selectedOrders.length} {selectedOrders.length===1?'serviço agendado':'serviços agendados'}</h2>{selectedOrders.length ? selectedOrders.map(o=><OrderCard key={o.id} order={o} customerName={customerNames.get(o.cliente_id) ?? 'Cliente'} onOpen={() => onOpen(o.id)}/>) : <EmptyState title="Nenhum serviço nesse dia" text="As OS agendadas aparecerão automaticamente aqui."/>}</div></section>
+}
+
+function Finance({ data, customerNames }: { data: AppData; customerNames: Map<string,string> }) {
+  const month = new Date().getMonth(); const year = new Date().getFullYear()
+  const paidPayments = data.payments.filter(p=>p.status==='pago')
+  const monthPaid = paidPayments.filter(p=>{const d=new Date(p.pago_em ?? p.created_at);return d.getMonth()===month&&d.getFullYear()===year}).reduce((s,p)=>s+Number(p.valor),0)
+  const totalOrders = data.orders.filter(o=>o.status!=='cancelada').reduce((s,o)=>s+Number(o.total ?? 0),0)
+  const totalPaid = paidPayments.reduce((s,p)=>s+Number(p.valor),0)
+  const receivable = Math.max(totalOrders-totalPaid,0)
+  const orderMap = new Map(data.orders.map(o=>[o.id,o]))
+  return <section className="page-section"><div className="page-heading"><div><span>RESULTADO</span><h1>Financeiro</h1></div></div><div className="finance-hero"><span>Recebido neste mês</span><strong>{money.format(monthPaid)}</strong><small>somente pagamentos confirmados</small></div><div className="metrics-grid two"><div className="metric-card"><span>Recebido total</span><strong>{money.format(totalPaid)}</strong><small>{paidPayments.length} pagamentos</small></div><div className="metric-card"><span>A receber</span><strong>{money.format(receivable)}</strong><small>saldo previsto das OS</small></div></div><section className="section-block inner"><div className="section-title"><div><span>ÚLTIMAS MOVIMENTAÇÕES</span><h2>Recebimentos</h2></div></div>{paidPayments.length ? paidPayments.slice(0,5).map(p=>{ const order=orderMap.get(p.ordem_id); return <div className="payment-row" key={p.id}><div className="payment-icon"><Icon name="check"/></div><div><strong>{order ? customerNames.get(order.cliente_id) ?? 'Cliente' : 'Cliente'}</strong><span>{order ? `OS #${String(order.numero).padStart(4,'0')}` : 'OS'} • {p.metodo.replace('_',' ')}</span></div><b>{money.format(Number(p.valor))}</b></div>}) : <EmptyState title="Nenhum recebimento" text="Quando um pagamento for confirmado, ele aparecerá aqui."/>}</section></section>
+}
+
+function NewCustomerModal({ companyId, userId, onClose, onCreated }: { companyId: string; userId: string; onClose: () => void; onCreated: () => Promise<void> }) {
+  const [name,setName]=useState(''); const [phone,setPhone]=useState(''); const [email,setEmail]=useState(''); const [busy,setBusy]=useState(false); const [error,setError]=useState('')
+  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const {error:dbError}=await supabase.from('clientes').insert({empresa_id:companyId,nome:name,telefone:phone||null,whatsapp:phone||null,email:email||null,created_by:userId});if(dbError)throw dbError;await onCreated();onClose()}catch(err){setError(err instanceof Error?err.message:'Erro ao cadastrar cliente.')}finally{setBusy(false)}}
+  return <div className="modal-backdrop" onClick={onClose}><form className="modal-sheet" onSubmit={submit} onClick={e=>e.stopPropagation()}><div className="sheet-handle"/><div className="modal-title"><div><span>NOVO CLIENTE</span><h2>Cadastro rápido</h2></div><button type="button" onClick={onClose}>×</button></div><label>Nome<input autoFocus required value={name} onChange={e=>setName(e.target.value)} placeholder="Nome do cliente"/></label><label>WhatsApp / telefone<input value={phone} onChange={e=>setPhone(e.target.value)} inputMode="tel" placeholder="(11) 99999-9999"/></label><label>E-mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="cliente@email.com"/></label>{error&&<div className="form-alert error">{error}</div>}<button className="wide-primary" disabled={busy}><Icon name="check"/>{busy?'Salvando...':'Salvar cliente'}</button></form></div>
+}
+
+function NewOrderModal({ companyId, userId, customers, onClose, onCreated }: { companyId: string; userId: string; customers: Customer[]; onClose: () => void; onCreated: () => Promise<void> }) {
+  const [step,setStep]=useState(1); const [customerId,setCustomerId]=useState(customers[0]?.id ?? 'new'); const [name,setName]=useState(''); const [phone,setPhone]=useSta

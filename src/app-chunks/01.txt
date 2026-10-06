@@ -1,0 +1,162 @@
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Session, User } from '@supabase/supabase-js'
+import { Icon } from './components/Icon'
+import { supabase } from './lib/supabase'
+
+type Tab = 'home' | 'orders' | 'customers' | 'agenda' | 'finance'
+type OrderStatus = 'rascunho' | 'orcamento' | 'aguardando_aprovacao' | 'aprovada' | 'agendada' | 'em_deslocamento' | 'em_execucao' | 'pausada' | 'concluida' | 'cancelada'
+type ItemType = 'servico' | 'produto' | 'peca' | 'taxa' | 'desconto'
+type PhotoMoment = 'antes' | 'durante' | 'depois' | 'outro'
+
+type Company = { id: string; nome: string; segmento: string }
+type Member = { id: string; empresa_id: string; nome: string | null; email: string | null; papel: string }
+type Customer = { id: string; nome: string; telefone: string | null; whatsapp: string | null; email: string | null; created_at: string }
+type Order = {
+  id: string
+  numero: number
+  cliente_id: string
+  titulo: string
+  descricao: string | null
+  status: OrderStatus
+  agendado_inicio: string | null
+  total: number | null
+  created_at: string
+}
+type OrderDetail = Order & {
+  prioridade: string
+  agendado_fim: string | null
+  iniciado_em: string | null
+  concluido_em: string | null
+  subtotal: number
+  desconto: number
+  acrescimo: number
+  aprovado_em: string | null
+  aprovado_por_nome: string | null
+  token_publico: string
+  observacoes_cliente: string | null
+  observacoes_internas: string | null
+  assinatura_nome: string | null
+  assinatura_em: string | null
+}
+type Payment = { id: string; ordem_id: string; valor: number; metodo: string; status: string; pago_em: string | null; created_at: string }
+type OrderItem = { id: string; tipo: ItemType; descricao: string; quantidade: number; valor_unitario: number; valor_total: number; garantia_dias: number }
+type OrderHistory = { id: string; status_anterior: string | null; status_novo: OrderStatus; observacao: string | null; created_at: string }
+type OrderAttachment = { id: string; tipo: string; momento: PhotoMoment; storage_path: string; legenda: string | null; created_at: string; signedUrl?: string }
+type Guarantee = { id: string; descricao: string; inicio: string; fim: string; status: string }
+type DetailData = { order: OrderDetail; items: OrderItem[]; payments: Payment[]; history: OrderHistory[]; attachments: OrderAttachment[]; guarantees: Guarantee[] }
+type AppData = { customers: Customer[]; orders: Order[]; payments: Payment[] }
+
+type PublicPortalData = {
+  empresa: { nome: string; logo_url: string | null; cor_primaria: string | null }
+  cliente: { nome: string }
+  ordem: {
+    id: string; numero: number; titulo: string; descricao: string | null; status: OrderStatus; prioridade: string; agendado_inicio: string | null
+    subtotal: number; desconto: number; acrescimo: number; total: number; aprovado_em: string | null; aprovado_por_nome: string | null
+    assinatura_nome: string | null; assinatura_em: string | null; observacoes_cliente: string | null; created_at: string
+  }
+  itens: Array<{ id: string; tipo: ItemType; descricao: string; quantidade: number; valor_unitario: number; valor_total: number; garantia_dias: number }>
+  financeiro: { pago: number; pendente: number }
+}
+
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const dateFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' })
+const dateYearFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+const timeFmt = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' })
+const fullDateFmt = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
+const dateTimeFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+
+const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
+  rascunho: { label: 'Rascunho', className: 'status-gray' },
+  orcamento: { label: 'Orçamento', className: 'status-gray' },
+  aguardando_aprovacao: { label: 'Aguardando aprovação', className: 'status-purple' },
+  aprovada: { label: 'Aprovada', className: 'status-blue' },
+  agendada: { label: 'Agendada', className: 'status-purple' },
+  em_deslocamento: { label: 'Em deslocamento', className: 'status-amber' },
+  em_execucao: { label: 'Em andamento', className: 'status-amber' },
+  pausada: { label: 'Pausada', className: 'status-red' },
+  concluida: { label: 'Concluída', className: 'status-green' },
+  cancelada: { label: 'Cancelada', className: 'status-red' },
+}
+
+function parseMoney(value: string) {
+  if (!value.trim()) return 0
+  const normalized = value.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')
+  const number = Number(normalized)
+  return Number.isFinite(number) ? number : 0
+}
+
+function localDateKey(value: string | Date) {
+  const date = typeof value === 'string' ? new Date(value) : value
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function normalizeNumber(value: unknown) {
+  return Number(value ?? 0)
+}
+
+function Header({ company, onLogout }: { company: Company; onLogout: () => void }) {
+  return <header className="topbar">
+    <div className="brand-mark">N</div>
+    <div className="brand-copy"><strong>Nethanel OS</strong><span>{company.nome}</span></div>
+    <button className="logout-button" onClick={onLogout}>Sair</button>
+  </header>
+}
+
+function BottomNav({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
+  const items: Array<{ id: Tab; label: string; icon: 'home' | 'orders' | 'users' | 'calendar' | 'wallet' }> = [
+    { id: 'home', label: 'Início', icon: 'home' },
+    { id: 'orders', label: 'OS', icon: 'orders' },
+    { id: 'customers', label: 'Clientes', icon: 'users' },
+    { id: 'agenda', label: 'Agenda', icon: 'calendar' },
+    { id: 'finance', label: 'Financeiro', icon: 'wallet' },
+  ]
+  return <nav className="bottom-nav">{items.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => onChange(item.id)}><Icon name={item.icon}/><span>{item.label}</span></button>)}</nav>
+}
+
+function LoadingScreen() {
+  return <div className="center-screen"><div className="brand-mark large">N</div><div className="spinner"/><strong>Carregando Nethanel OS</strong></div>
+}
+
+function AuthScreen() {
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true); setError(''); setMessage('')
+    try {
+      if (mode === 'login') {
+        const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+        if (authError) throw authError
+      } else {
+        const { data, error: authError } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } })
+        if (authError) throw authError
+        if (!data.session) setMessage('Cadastro criado. Confira seu e-mail para confirmar o acesso.')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível entrar.')
+    } finally { setBusy(false) }
+  }
+
+  async function loginGoogle() {
+    setBusy(true); setError('')
+    const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+    if (authError) { setError(authError.message); setBusy(false) }
+  }
+
+  return <div className="auth-shell"><section className="auth-card">
+    <div className="auth-brand"><div className="brand-mark large">N</div><div><strong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>
+    <div className="auth-copy"><span>OPERAÇÃO PROFISSIONAL</span><h1>{mode === 'login' ? 'Entre na sua operação.' : 'Crie sua conta.'}</h1><p>Clientes, orçamentos, agenda, execução e financeiro em um só lugar.</p></div>
+    <button className="google-button" type="button" onClick={loginGoogle} disabled={busy}><b>G</b> Continuar com Google</button>
+    <div className="divider"><span>ou</span></div>
+    <form onSubmit={submit}>
+      {mod
