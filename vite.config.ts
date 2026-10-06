@@ -19,16 +19,29 @@ function chunkedVirtualModules(): Plugin {
       .join('')
 
     if (folder === 'src/app-chunks') {
-      // Mantém links internos, OAuth e portal funcionando em /index/ no GitHub Pages
-      // e em / quando o mesmo código for usado em domínio próprio/Vercel.
-      const appRoot = "new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\\/$/, '')"
-      source = source.replaceAll('window.location.origin', appRoot)
+      source = source.replace(
+        'redirectTo: window.location.origin',
+        'redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).toString()',
+      )
 
-      // Rebranding direto no código-fonte virtual: sem MutationObserver e sem alterar o DOM em runtime.
+      source = source.replace(
+        'const url=`${window.location.origin}${window.location.pathname}?os=${data.order.token_publico}`;',
+        'const url=`${new URL(import.meta.env.BASE_URL, window.location.origin).toString()}?os=${data.order.token_publico}`;',
+      )
+
+      source = source.replace(
+        '<div className="auth-brand"><div className="brand-mark large">N</div><div><strong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>',
+        '<div className="auth-brand zelo-auth-brand"><img className="zelo-auth-logo" src={`${import.meta.env.BASE_URL}zelo-logo.jpg`} alt="Zelo by Nethanel"/></div>',
+      )
+
       source = source.replaceAll('Nethanel OS', 'Zelo')
-      source = source.replaceAll('Carregando Zelo', 'Carregando Zelo')
-      source = source.replaceAll('<div className=\"brand-mark\">N</div>', '<div className=\"brand-mark\">Z</div>')
-      source = source.replaceAll('<div className=\"brand-mark large\">N</div>', '<div className=\"brand-mark large\">Z</div>')
+      source = source.replaceAll('<div className="brand-mark">N</div>', '<div className="brand-mark">Z</div>')
+      source = source.replaceAll('<div className="brand-mark large">N</div>', '<div className="brand-mark large">Z</div>')
+      source = source.replaceAll('Carregando Nethanel OS', 'Carregando Zelo')
+    }
+
+    if (folder === 'src/style-chunks') {
+      source += '\n.zelo-auth-brand{justify-content:center!important;align-items:center!important;padding:0!important;margin-bottom:18px}.zelo-auth-logo{display:block;width:min(235px,76vw);height:auto;max-height:235px;object-fit:contain;border-radius:26px;margin:0 auto;box-shadow:0 16px 40px rgba(8,17,32,.16)}@media(max-width:430px){.zelo-auth-logo{width:min(215px,72vw);border-radius:22px}}\n'
     }
 
     return source
