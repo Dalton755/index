@@ -1,0 +1,302 @@
+
+/* ===== Nethanel OS · Premium mobile refinement ===== */
+:root{
+  --navy:#0a1530;
+  --navy-2:#102a56;
+  --ink:#162238;
+  --muted:#748196;
+  --line:#e7ebf1;
+  --blue:#2468e8;
+  --blue-2:#4b8df8;
+  --cyan:#36c7e8;
+  --surface:#ffffff;
+  --surface-soft:#f8fafc;
+  --green:#11966a;
+  --amber:#d98508;
+  --red:#cf4c55;
+  --shadow-sm:0 8px 24px rgba(20,37,65,.055);
+  --shadow-md:0 18px 46px rgba(20,37,65,.09);
+  --radius:20px;
+}
+
+html{background:#f6f8fb;scroll-behavior:smooth}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 84% -5%,rgba(52,148,255,.12),transparent 27%),
+    linear-gradient(180deg,#f3f7fd 0,#f7f9fc 24%,#f6f8fb 100%);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{-webkit-tap-highlight-color:transparent;transition:transform .14s ease,opacity .14s ease,box-shadow .18s ease,background .18s ease}
+button:active{transform:scale(.975)}
+input,select,textarea{-webkit-tap-highlight-color:transparent}
+
+.app-shell{max-width:760px;padding-bottom:108px}
+.topbar{
+  height:68px;
+  padding:9px 16px;
+  background:rgba(249,251,253,.88);
+  border-bottom:1px solid rgba(225,231,239,.78);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+}
+.brand-mark{
+  width:39px;height:39px;border-radius:13px;
+  background:linear-gradient(145deg,#0b1730 0%,#245fd1 72%,#38c3e6 135%);
+  box-shadow:0 9px 23px rgba(31,88,186,.2);
+  font-size:20px;
+}
+.brand-copy strong{font-size:13px;letter-spacing:-.01em}
+.brand-copy span{font-size:9.5px;color:#8290a4}
+.logout-button{
+  background:rgba(255,255,255,.8);
+  border-color:#e3e8ef;
+  color:#5d6a7e;
+  border-radius:12px;
+  font-size:10px;
+  padding:8px 11px;
+}
+
+.hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  margin:14px 14px 18px;
+  min-height:160px;
+  border-radius:26px;
+  padding:23px 21px;
+  background:linear-gradient(135deg,#09162c 0%,#12386f 58%,#174a89 100%);
+  box-shadow:0 20px 48px rgba(13,37,74,.17);
+}
+.hero:before{
+  content:"";position:absolute;z-index:-1;width:190px;height:190px;border-radius:50%;
+  right:-52px;top:-85px;background:radial-gradient(circle,rgba(67,203,238,.42),rgba(56,142,255,.12) 50%,transparent 70%);
+}
+.hero:after{
+  content:"";position:absolute;z-index:-1;width:140px;height:140px;border-radius:50%;
+  left:-70px;bottom:-95px;background:rgba(50,111,224,.18);filter:blur(6px);
+}
+.hero h1{font-size:26px;margin:7px 0 6px;font-weight:780;letter-spacing:-.045em}
+.hero p{font-size:12px;color:#cad8eb;line-height:1.45}
+.hero .eyebrow{font-size:8.5px;color:#9eb9de;letter-spacing:.14em}
+.primary-action{
+  min-height:46px;border-radius:15px;padding:11px 14px;
+  box-shadow:0 10px 22px rgba(0,0,0,.12);
+  font-size:11px;
+}
+.primary-action:hover{box-shadow:0 13px 26px rgba(0,0,0,.16)}
+
+.metrics-grid{gap:9px;padding:0 14px}
+.metric-card{
+  min-height:110px;
+  border-radius:20px;
+  border-color:#e6ebf2;
+  box-shadow:var(--shadow-sm);
+  padding:15px;
+  background:rgba(255,255,255,.94);
+}
+.metric-card span{font-size:10.5px;color:#778499;font-weight:720}
+.metric-card strong{font-size:23px;margin:9px 0 4px;letter-spacing:-.045em}
+.metric-card small{font-size:9.5px;color:#929dae}
+.metric-card.accent{
+  background:linear-gradient(145deg,#f3f7ff 0%,#edf9fc 100%);
+  border-color:#dce9f7;
+}
+
+.section-block{padding:23px 14px 0}
+.section-title{margin-bottom:11px}
+.section-title h2{font-size:17px;font-weight:770}
+.section-title span,.page-heading span,.agenda-day>span,.auth-copy>span,.modal-title span{font-size:8px;letter-spacing:.145em}
+.section-title button{font-size:10.5px}
+
+.timeline,.order-card,.customer-card,.payment-row,.detail-card{
+  border-color:#e5eaf1;
+  box-shadow:var(--shadow-sm);
+}
+.timeline{border-radius:21px;background:rgba(255,255,255,.94)}
+.timeline-item{min-height:86px}
+.timeline-content strong{font-size:13px}
+.timeline-content span{font-size:10.5px}
+.timeline-content b{font-size:8.5px;padding:4px 7px}
+
+.stack{gap:9px}
+.order-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:20px;
+  padding:15px;
+  background:rgba(255,255,255,.96);
+}
+.order-card:after{
+  content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 5px 5px 0;
+  background:linear-gradient(#2e70eb,#43c3e7);opacity:.72;
+}
+.clickable-card:hover{transform:translateY(-1px);box-shadow:0 13px 29px rgba(25,44,75,.075)}
+.order-code{font-size:9px;color:#8793a5}
+.order-card h3{font-size:14px;line-height:1.3;margin:4px 0 0}
+.order-card p{font-size:10.5px;line-height:1.45;margin:7px 0 12px}
+.order-meta{padding-top:11px;gap:10px;font-size:9.5px}
+.order-meta strong{font-size:12px}
+.status{font-size:8px;padding:5px 8px;letter-spacing:.01em}
+
+.page-section{padding:20px 14px 8px}
+.page-heading{margin-bottom:16px}
+.page-heading h1{font-size:24px;font-weight:790;letter-spacing:-.045em}
+.square-add{
+  width:43px;height:43px;border-radius:14px;
+  background:linear-gradient(145deg,#0e2348,#235fc9);
+  box-shadow:0 10px 21px rgba(28,78,166,.18);
+}
+.search{
+  height:49px;border-radius:16px;border-color:#e3e9f0;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 5px 16px rgba(26,45,76,.03);
+}
+.search input{font-size:12px}
+.filter-row{gap:6px;padding-bottom:12px}
+.filter-row button{padding:8px 12px;font-size:9.5px;background:rgba(255,255,255,.9);border-color:#e3e8ef}
+.filter-row button.selected{background:#102b57;border-color:#102b57;box-shadow:0 7px 16px rgba(16,43,87,.15)}
+
+.customer-list{gap:8px}
+.customer-card{border-radius:18px;padding:13px;background:rgba(255,255,255,.96)}
+.avatar{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#eaf0ff,#e9f9fc);font-size:12px}
+.customer-info strong{font-size:13px}.customer-info span{font-size:10px}.customer-info small{font-size:9px}
+
+.date-strip{gap:6px;margin-bottom:21px}
+.date-strip button{border-radius:15px;padding:9px 3px;font-size:9px;background:rgba(255,255,255,.94);border-color:#e5eaf1}
+.date-strip button strong{font-size:15px}
+.date-strip button.selected{background:linear-gradient(145deg,#0d244b,#164687);box-shadow:0 9px 18px rgba(18,55,111,.16)}
+.agenda-day h2{font-size:18px}
+
+.finance-hero{
+  border-radius:25px;padding:22px;
+  background:linear-gradient(135deg,#09162b,#133b76 65%,#164989);
+  box-shadow:0 18px 40px rgba(12,39,79,.16);
+}
+.finance-hero span{font-size:10px}.finance-hero strong{font-size:32px}.finance-hero small{font-size:9.5px}
+.payment-row{border-radius:17px;padding:12px;background:rgba(255,255,255,.96)}
+.payment-icon{border-radius:12px}.payment-row strong{font-size:12px}.payment-row span{font-size:9px}.payment-row b{font-size:12px}
+
+.bottom-nav{
+  left:50%;bottom:10px;
+  width:min(728px,calc(100% - 20px));
+  height:68px;
+  border:1px solid rgba(220,227,236,.9);
+  border-radius:22px;
+  padding:6px 7px max(6px,env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.9);
+  box-shadow:0 16px 38px rgba(17,34,60,.14);
+  backdrop-filter:blur(24px) saturate(170%);
+  -webkit-backdrop-filter:blur(24px) saturate(170%);
+}
+.bottom-nav button{border-radius:15px;gap:2px;font-size:8px;font-weight:760;position:relative}
+.bottom-nav svg{width:19px}
+.bottom-nav button.active{color:#184fa9;background:#edf4ff}
+.bottom-nav button.active:after{content:"";position:absolute;top:4px;width:18px;height:2px;border-radius:99px;background:#2e6fe6}
+
+.floating-add{
+  right:18px;bottom:96px;width:54px;height:54px;border-radius:18px;
+  background:linear-gradient(145deg,#102b58,#2469e7);
+  box-shadow:0 14px 28px rgba(24,81,181,.28);
+}
+
+.modal-backdrop{background:rgba(7,15,29,.44);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.modal-sheet{
+  max-height:94vh;
+  border-radius:29px 29px 0 0;
+  padding:10px 18px calc(24px + env(safe-area-inset-bottom));
+  box-shadow:0 -20px 60px rgba(8,20,39,.22);
+}
+.sheet-handle{width:38px;height:4px;background:#d7dde6;margin-bottom:18px}
+.modal-title h2{font-size:20px;letter-spacing:-.03em}
+.modal-title button{border-radius:11px}
+.modal-sheet label,.auth-card label{font-size:10px;color:#5f6d80;gap:6px;margin:11px 0}
+.modal-sheet input,.modal-sheet select,.modal-sheet textarea,.auth-card input{
+  min-height:49px;border-radius:14px;border-color:#dfe5ed;font-size:12px;background:#fbfcfe;
+}
+.modal-sheet input:focus,.modal-sheet select:focus,.modal-sheet textarea:focus,.auth-card input:focus{
+  background:#fff;border-color:#4a7fe0;box-shadow:0 0 0 4px rgba(59,116,221,.1)
+}
+.wide-primary{
+  height:51px;border-radius:15px;
+  background:linear-gradient(135deg,#123467,#256ce8);
+  box-shadow:0 10px 22px rgba(35,99,211,.2);
+  font-size:11px;
+}
+.secondary-wide{border-radius:13px;background:#fbfcfe}
+
+.empty-state{
+  border-color:#d9e1eb;
+  background:linear-gradient(145deg,rgba(255,255,255,.86),rgba(248,251,255,.88));
+  border-radius:22px;padding:30px 20px;
+}
+.empty-state .empty-icon{width:44px;height:44px;border-radius:14px;background:#edf4ff}
+.empty-state strong{font-size:13px}.empty-state span{font-size:10px;line-height:1.5}
+
+.center-screen{background:radial-gradient(circle at 50% 35%,rgba(48,122,238,.09),transparent 28%);font-size:12px}
+.spinner{width:27px;height:27px;border-width:3px}
+
+.auth-shell{
+  padding:24px 16px;
+  background:radial-gradient(circle at 85% 4%,rgba(45,150,237,.18),transparent 30%),linear-gradient(180deg,#f0f5fc,#f8fafc 47%,#eef3f9);
+}
+.auth-card{
+  border-radius:29px;padding:25px;border-color:#e2e8f0;
+  box-shadow:0 28px 70px rgba(19,42,76,.12);
+}
+.auth-copy{margin:26px 0 19px}
+.auth-copy h1{font-size:28px;line-height:1.03}
+.auth-copy p{font-size:11px}
+.google-button{height:49px;border-radius:14px;background:#fbfcfe;font-size:11px}
+.password-field button{border-radius:10px}
+
+.detail-page{padding:16px 14px 112px;background:linear-gradient(180deg,#f8fafc,#f3f6fa)}
+.detail-top{margin-bottom:14px}
+.back-button{font-size:10.5px;color:#315b98}
+.detail-heading{
+  border-radius:25px;padding:21px;margin-bottom:12px;
+  background:linear-gradient(145deg,#09162b,#153d78 70%,#164a89);
+  box-shadow:0 17px 38px rgba(13,42,84,.16);
+}
+.detail-heading h1{font-size:22px}.detail-heading p{font-size:10px;line-height:1.5}
+.detail-actions{gap:7px}
+.detail-actions button,.detail-actions label{min-height:47px;border-radius:14px;font-size:9.5px}
+.action-primary{background:linear-gradient(135deg,#164a97,#2b76ee);box-shadow:0 8px 18px rgba(32,99,214,.17)}
+.detail-card{border-radius:21px;padding:15px;background:rgba(255,255,255,.97)}
+.detail-card-title h2{font-size:15.5px}.detail-card-title button{border-radius:10px;font-size:9px}
+.status-control select{height:43px;border-radius:13px;background:#fafcff}
+.payment-summary>div{border-radius:15px;background:#f8fafd}
+.photo-grid figure>div{border-radius:15px}
+
+.portal-shell{padding:18px 12px;background:radial-gradient(circle at 88% 2%,color-mix(in srgb,var(--portal-accent) 16%,transparent),transparent 30%),linear-gradient(180deg,#f0f5fc,#f8fafc 48%,#eef3f9)}
+.portal-card{border-radius:28px;padding:18px;box-shadow:0 26px 70px rgba(20,43,77,.13)}
+.portal-hero{border-radius:22px;background:linear-gradient(145deg,#0a162a,#164181);padding:19px}
+.portal-section{border-radius:18px;background:#fff}
+.portal-approval{border-radius:20px}
+
+@media(max-width:520px){
+  .app-shell{padding-bottom:104px}
+  .topbar{height:64px;padding:8px 13px}
+  .brand-mark{width:37px;height:37px;border-radius:12px}
+  .hero{margin:11px 12px 15px;padding:20px 18px;border-radius:23px;min-height:150px}
+  .hero h1{font-size:24px}
+  .metrics-grid{padding:0 12px}
+  .section-block{padding-left:12px;padding-right:12px}
+  .page-section{padding-left:12px;padding-right:12px}
+  .detail-page{padding-left:12px;padding-right:12px}
+  .bottom-nav{width:calc(100% - 16px);bottom:8px;height:66px;border-radius:21px}
+  .floating-add{right:15px;bottom:90px}
+  .modal-sheet{padding-left:16px;padding-right:16px}
+}
+
+@media(max-width:380px){
+  .hero{padding:18px 16px}.hero h1{font-size:22px}
+  .metric-card{padding:13px}.metric-card strong{font-size:20px}
+  .bottom-nav button{font-size:7.5px}.bottom-nav svg{width:18px}
+}
+
+@media(hover:hover){
+  .square-add:hover,.floating-add:hover,.wide-primary:hover{box-shadow:0 14px 30px rgba(29,86,185,.24);transform:translateY(-1px)}
+  .customer-card:hover,.payment-row:hover,.detail-card:hover{box-shadow:0 12px 28px rgba(22,42,73,.07)}
+}
