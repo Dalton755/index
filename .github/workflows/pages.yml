@@ -32,7 +32,7 @@ jobs:
       - name: Build Zelo
         run: npm run build
         env:
-          VITE_BASE_PATH: /index/
+          VITE_BASE_PATH: ./
           VITE_SUPABASE_URL: https://sxghzubovthsvmfqncch.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_6FvRO8jPLWjqwQJwM5bTDg_T1b3tb2Y
 
