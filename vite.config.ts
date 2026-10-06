@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const base = process.env.VITE_BASE_PATH || '/'
+const base = process.env.VITE_BASE_PATH || './'
 
 function chunkedVirtualModules(): Plugin {
   const appId = 'virtual:nethanel-app'
@@ -21,12 +21,7 @@ function chunkedVirtualModules(): Plugin {
     if (folder === 'src/app-chunks') {
       source = source.replace(
         'redirectTo: window.location.origin',
-        'redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).toString()',
-      )
-
-      source = source.replace(
-        'const url=`${window.location.origin}${window.location.pathname}?os=${data.order.token_publico}`;',
-        'const url=`${new URL(import.meta.env.BASE_URL, window.location.origin).toString()}?os=${data.order.token_publico}`;',
+        'redirectTo: `${window.location.origin}${window.location.pathname}`',
       )
 
       source = source.replace(
