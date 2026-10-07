@@ -42,6 +42,9 @@ type OrderDetail = Order & {
   observacoes_internas: string | null
   assinatura_nome: string | null
   assinatura_em: string | null
+  atribuicao_status: 'pendente' | 'aceita' | 'recusada' | null
+  atribuicao_respondida_em: string | null
+  atribuicao_motivo: string | null
 }
 type Payment = { id: string; ordem_id: string; valor: number; metodo: string; status: string; pago_em: string | null; created_at: string }
 type OrderItem = { id: string; tipo: ItemType; descricao: string; quantidade: number; valor_unitario: number; valor_total: number; garantia_dias: number }
