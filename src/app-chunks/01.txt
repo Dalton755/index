@@ -4,6 +4,7 @@ import { Icon } from './components/Icon'
 import { supabase } from './lib/supabase'
 import { TeamPage } from './components/TeamPage'
 import { AssignmentControl } from './components/AssignmentControl'
+import { NotificationCenter } from './components/NotificationCenter'
 
 type Tab = 'home' | 'orders' | 'customers' | 'agenda' | 'finance' | 'team'
 type OrderStatus = 'rascunho' | 'orcamento' | 'aguardando_aprovacao' | 'aprovada' | 'agendada' | 'em_deslocamento' | 'em_execucao' | 'pausada' | 'concluida' | 'cancelada'
@@ -100,12 +101,12 @@ function normalizeNumber(value: unknown) {
   return Number(value ?? 0)
 }
 
-function Header({ company, member, onTeam, onLogout }: { company: Company; member: Member; onTeam?: () => void; onLogout: () => void }) {
+function Header({ company, member, userId, onOpenOrder, onTeam, onLogout }: { company: Company; member: Member; userId: string; onOpenOrder?: (orderId: string) => void; onTeam?: () => void; onLogout: () => void }) {
   const canManage = member.papel === 'admin' || member.papel === 'gestor'
   return <header className="topbar">
     <div className="brand-mark">N</div>
     <div className="brand-copy"><strong>Nethanel OS</strong><span>{company.nome}</span></div>
-    <div className="header-actions">{canManage && onTeam && <button className="team-header-button" onClick={onTeam}><Icon name="users"/><span>Equipe</span></button>}<button className="logout-button" onClick={onLogout}>Sair</button></div>
+    <div className="header-actions"><NotificationCenter companyId={company.id} userId={userId} onOpenOrder={onOpenOrder}/>{canManage && onTeam && <button className="team-header-button" onClick={onTeam}><Icon name="users"/><span>Equipe</span></button>}<button className="logout-button" onClick={onLogout}>Sair</button></div>
   </header>
 }
 
