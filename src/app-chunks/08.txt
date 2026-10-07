@@ -12,7 +12,7 @@ function OperationalApp({ session, member, company, reloadProfile }: { session: 
   useEffect(()=>{void loadData()},[loadData])
   const customerNames=useMemo(()=>new Map(data.customers.map(c=>[c.id,c.nome])),[data.customers])
   const orderTotals=useMemo(()=>{const map=new Map<string,{count:number,total:number}>();data.orders.forEach(o=>{const v=map.get(o.cliente_id)??{count:0,total:0};v.count++;v.total+=Number(o.total??0);map.set(o.cliente_id,v)});return map},[data.orders])
-  async function logout(){await supabase.auth.signOut();await reloadProfile()}
+  async function logout(){await unregisterZeloPushSubscription();await supabase.auth.signOut();await reloadProfile()}
   const goTeam=()=>{setSelectedOrderId(null);setTab('team')}
   if(loading)return <LoadingScreen/>
   if(selectedOrderId){const selectedOrder=data.orders.find(o=>o.id===selectedOrderId);const customer=selectedOrder?data.customers.find(c=>c.id===selectedOrder.cliente_id):undefined;return <div className="app-shell"><Header company={company} member={member} userId={session.user.id} onOpenOrder={setSelectedOrderId} onTeam={canManage?goTeam:undefined} onLogout={logout}/><OrderDetailView orderId={selectedOrderId} companyId={company.id} userId={session.user.id} customer={customer} member={member} onBack={()=>setSelectedOrderId(null)} onChanged={loadData}/></div>}
