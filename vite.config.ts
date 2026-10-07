@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const base = process.env.VITE_BASE_PATH || './'
+const zeloLogoData = `data:image/jpeg;base64,${readFileSync(resolve(process.cwd(), 'public/zelo-logo.jpg')).toString('base64')}`
 
 function chunkedVirtualModules(): Plugin {
   const appId = 'virtual:nethanel-app'
@@ -26,7 +27,7 @@ function chunkedVirtualModules(): Plugin {
 
       source = source.replace(
         '<div className="auth-brand"><div className="brand-mark large">N</div><div><strong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>',
-        `<div className="auth-brand zelo-auth-brand"><img className="zelo-auth-logo" src={window.location.hostname.endsWith('github.io') ? '/index/zelo-logo.jpg' : '/zelo-logo.jpg'} alt="Zelo by Nethanel"/></div>`,
+        `<div className="auth-brand zelo-auth-brand"><img className="zelo-auth-logo" src="${zeloLogoData}" alt="Zelo by Nethanel"/></div>`,
       )
 
       source = source.replaceAll('Nethanel OS', 'Zelo')
