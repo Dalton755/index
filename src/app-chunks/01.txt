@@ -163,9 +163,4 @@ function AuthScreen() {
   }
 
   return <div className="auth-shell"><section className="auth-card">
-    <div className="auth-brand"><div className="brand-mark large">N</div><div><strong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>
-    <div className="auth-copy"><span>OPERAÇÃO PROFISSIONAL</span><h1>{mode === 'login' ? 'Entre na sua operação.' : 'Crie sua conta.'}</h1><p>Clientes, orçamentos, agenda, execução e financeiro em um só lugar.</p></div>
-    <button className="google-button" type="button" onClick={loginGoogle} disabled={busy}><b>G</b> Continuar com Google</button>
-    <div className="divider"><span>ou</span></div>
-    <form onSubmit={submit}>
-      {mod
+    <div className="auth-brand"><div className="brand-mark large">N</div><div><st
