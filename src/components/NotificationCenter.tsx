@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Icon } from './Icon'
 import { supabase } from '../lib/supabase'
+import {
+  ensureZeloPushSubscription,
+  sendZeloPushTest,
+  type ZeloPushPermission,
+} from '../lib/push'
 
 type ZeloNotification = {
   id: string
@@ -33,9 +38,12 @@ export function NotificationCenter({
 }) {
   const [items, setItems] = useState<ZeloNotification[]>([])
   const [open, setOpen] = useState(false)
-  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(
+  const [permission, setPermission] = useState<ZeloPushPermission>(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
+  const [pushActive, setPushActive] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [testSent, setTestSent] = useState(false)
   const [error, setError] = useState('')
 
   const unread = useMemo(() => items.filter(item => !item.lida_em).length, [items])
@@ -74,7 +82,6 @@ export function NotificationCenter({
           const item = payload.new as ZeloNotification
           if (item.empresa_id !== companyId) return
           setItems(current => [item, ...current.filter(existing => existing.id !== item.id)].slice(0, 30))
-          void showBrowserNotification(item)
         },
       )
       .subscribe()
@@ -84,47 +91,78 @@ export function NotificationCenter({
     }
   }, [companyId, userId, load])
 
-  async function registerWorker() {
-    if (!('serviceWorker' in navigator)) return null
-    try {
-      return await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}zelo-sw.js`)
-    } catch {
-      return null
+  useEffect(() => {
+    if (typeof Notification === 'undefined') {
+      setPermission('unsupported')
+      return
     }
-  }
+
+    setPermission(Notification.permission)
+
+    if (Notification.permission !== 'granted') {
+      setPushActive(false)
+      return
+    }
+
+    let cancelled = false
+    setPushBusy(true)
+
+    void ensureZeloPushSubscription(companyId, userId)
+      .then(result => {
+        if (cancelled) return
+        setPermission(result.permission)
+        setPushActive(result.active)
+      })
+      .catch(err => {
+        if (cancelled) return
+        setPushActive(false)
+        setError(err instanceof Error ? err.message : 'Não foi possível ativar o Push neste dispositivo.')
+      })
+      .finally(() => {
+        if (!cancelled) setPushBusy(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [companyId, userId])
 
   async function enableBrowserAlerts() {
+    setPushBusy(true)
+    setTestSent(false)
     setError('')
-    if (typeof Notification === 'undefined' || !('serviceWorker' in navigator)) {
-      setPermission('unsupported')
-      setError('Este navegador não oferece notificações para o Zelo.')
-      return
-    }
 
-    const registration = await registerWorker()
-    if (!registration) {
-      setError('Não foi possível preparar as notificações neste navegador.')
-      return
-    }
+    try {
+      const result = await ensureZeloPushSubscription(companyId, userId, true)
+      setPermission(result.permission)
+      setPushActive(result.active)
 
-    const result = await Notification.requestPermission()
-    setPermission(result)
-    if (result === 'denied') setError('As notificações foram bloqueadas no navegador.')
+      if (result.permission === 'denied') {
+        setError('As notificações foram bloqueadas no navegador.')
+      } else if (result.permission === 'unsupported') {
+        setError('Este navegador não oferece notificações Push para o Zelo.')
+      }
+    } catch (err) {
+      setPushActive(false)
+      setError(err instanceof Error ? err.message : 'Não foi possível ativar o Push neste dispositivo.')
+    } finally {
+      setPushBusy(false)
+    }
   }
 
-  async function showBrowserNotification(item: ZeloNotification) {
-    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    const registration = await registerWorker()
-    if (!registration) return
+  async function testPush() {
+    setPushBusy(true)
+    setTestSent(false)
+    setError('')
 
-    const appUrl = `${window.location.origin}${window.location.pathname}`
-    await registration.showNotification(item.titulo, {
-      body: item.mensagem,
-      icon: `${import.meta.env.BASE_URL}zelo-icon.svg`,
-      badge: `${import.meta.env.BASE_URL}zelo-icon.svg`,
-      tag: `zelo-${item.id}`,
-      data: { url: appUrl },
-    })
+    try {
+      await sendZeloPushTest(companyId)
+      setTestSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar o Push de teste.')
+    } finally {
+      setPushBusy(false)
+    }
   }
 
   async function markRead(item: ZeloNotification) {
@@ -167,6 +205,17 @@ export function NotificationCenter({
     if (item.ordem_id && onOpenOrder) onOpenOrder(item.ordem_id)
   }
 
+  const pushDescription =
+    permission === 'denied'
+      ? 'Bloqueados pelo navegador.'
+      : permission === 'unsupported'
+        ? 'Não suportados neste navegador.'
+        : pushBusy
+          ? 'Preparando este dispositivo...'
+          : pushActive
+            ? 'Ativados neste dispositivo.'
+            : 'Receba avisos mesmo com o Zelo fechado.'
+
   return <div className="notification-center">
     <button
       type="button"
@@ -186,13 +235,21 @@ export function NotificationCenter({
           {unread > 0 && <button type="button" onClick={() => void markAllRead()}>Marcar lidas</button>}
         </div>
 
-        {permission !== 'granted' && <div className="notification-permission">
+        <div className="notification-permission">
           <div>
             <strong>Avisos no celular</strong>
-            <span>{permission === 'denied' ? 'Bloqueados pelo navegador.' : permission === 'unsupported' ? 'Não suportados neste navegador.' : 'Receba alertas mesmo com outra aba aberta.'}</span>
+            <span>{pushDescription}</span>
           </div>
-          {permission === 'default' && <button type="button" onClick={() => void enableBrowserAlerts()}>Ativar</button>}
-        </div>}
+          {permission !== 'denied' && permission !== 'unsupported' && (
+            pushActive
+              ? <button type="button" disabled={pushBusy} onClick={() => void testPush()}>
+                  {testSent ? 'Enviado ✓' : pushBusy ? 'Enviando...' : 'Testar'}
+                </button>
+              : <button type="button" disabled={pushBusy} onClick={() => void enableBrowserAlerts()}>
+                  {pushBusy ? 'Ativando...' : 'Ativar'}
+                </button>
+          )}
+        </div>
 
         {error && <div className="notification-error">{error}</div>}
 
