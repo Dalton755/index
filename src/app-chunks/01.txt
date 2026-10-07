@@ -2,14 +2,16 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 import type { Session, User } from '@supabase/supabase-js'
 import { Icon } from './components/Icon'
 import { supabase } from './lib/supabase'
+import { TeamPage } from './components/TeamPage'
+import { AssignmentControl } from './components/AssignmentControl'
 
-type Tab = 'home' | 'orders' | 'customers' | 'agenda' | 'finance'
+type Tab = 'home' | 'orders' | 'customers' | 'agenda' | 'finance' | 'team'
 type OrderStatus = 'rascunho' | 'orcamento' | 'aguardando_aprovacao' | 'aprovada' | 'agendada' | 'em_deslocamento' | 'em_execucao' | 'pausada' | 'concluida' | 'cancelada'
 type ItemType = 'servico' | 'produto' | 'peca' | 'taxa' | 'desconto'
 type PhotoMoment = 'antes' | 'durante' | 'depois' | 'outro'
 
 type Company = { id: string; nome: string; segmento: string }
-type Member = { id: string; empresa_id: string; nome: string | null; email: string | null; papel: string }
+type Member = { id: string; empresa_id: string; user_id: string; nome: string | null; email: string | null; papel: string }
 type Customer = { id: string; nome: string; telefone: string | null; whatsapp: string | null; email: string | null; created_at: string }
 type Order = {
   id: string
@@ -19,6 +21,7 @@ type Order = {
   descricao: string | null
   status: OrderStatus
   agendado_inicio: string | null
+  tecnico_responsavel: string | null
   total: number | null
   created_at: string
 }
@@ -97,23 +100,29 @@ function normalizeNumber(value: unknown) {
   return Number(value ?? 0)
 }
 
-function Header({ company, onLogout }: { company: Company; onLogout: () => void }) {
+function Header({ company, member, onTeam, onLogout }: { company: Company; member: Member; onTeam?: () => void; onLogout: () => void }) {
+  const canManage = member.papel === 'admin' || member.papel === 'gestor'
   return <header className="topbar">
     <div className="brand-mark">N</div>
     <div className="brand-copy"><strong>Nethanel OS</strong><span>{company.nome}</span></div>
-    <button className="logout-button" onClick={onLogout}>Sair</button>
+    <div className="header-actions">{canManage && onTeam && <button className="team-header-button" onClick={onTeam}><Icon name="users"/><span>Equipe</span></button>}<button className="logout-button" onClick={onLogout}>Sair</button></div>
   </header>
 }
 
-function BottomNav({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
-  const items: Array<{ id: Tab; label: string; icon: 'home' | 'orders' | 'users' | 'calendar' | 'wallet' }> = [
+function BottomNav({ tab, onChange, member }: { tab: Tab; onChange: (tab: Tab) => void; member: Member }) {
+  const allItems: Array<{ id: Tab; label: string; icon: 'home' | 'orders' | 'users' | 'calendar' | 'wallet' }> = [
     { id: 'home', label: 'Início', icon: 'home' },
     { id: 'orders', label: 'OS', icon: 'orders' },
     { id: 'customers', label: 'Clientes', icon: 'users' },
     { id: 'agenda', label: 'Agenda', icon: 'calendar' },
     { id: 'finance', label: 'Financeiro', icon: 'wallet' },
   ]
-  return <nav className="bottom-nav">{items.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => onChange(item.id)}><Icon name={item.icon}/><span>{item.label}</span></button>)}</nav>
+  const items = member.papel === 'tecnico'
+    ? allItems.filter(item => ['home','orders','agenda'].includes(item.id))
+    : member.papel === 'financeiro'
+      ? allItems.filter(item => ['home','orders','finance'].includes(item.id))
+      : allItems
+  return <nav className="bottom-nav" style={{gridTemplateColumns:`repeat(${items.length},1fr)`}}>{items.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => onChange(item.id)}><Icon name={item.icon}/><span>{item.label}</span></button>)}</nav>
 }
 
 function LoadingScreen() {
