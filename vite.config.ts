@@ -26,7 +26,7 @@ function chunkedVirtualModules(): Plugin {
 
       source = source.replace(
         '<div className="auth-brand"><div className="brand-mark large">N</div><div><strong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>',
-        '<div className="auth-brand zelo-auth-brand"><img className="zelo-auth-logo" src={`${import.meta.env.BASE_URL}zelo-logo.jpg`} alt="Zelo by Nethanel"/></div>',
+        '<div className="auth-brand zelo-auth-brand"><img className="zelo-auth-logo" src={window.location.hostname.endsWith('github.io') ? '/index/zelo-logo.jpg' : '/zelo-logo.jpg'} alt="Zelo by Nethanel"/></div>',
       )
 
       source = source.replaceAll('Nethanel OS', 'Zelo')
