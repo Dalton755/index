@@ -7,8 +7,4 @@
 .tech-scope-note{background:#edf5ff;border:1px solid #d5e5fb;border-radius:17px;padding:13px;margin:0 0 12px;color:#315b98;font-size:10px;line-height:1.5}.tech-budget .item-row b,.tech-budget .mini-delete,.tech-budget .totals{display:none}
 @media(max-width:520px){.team-header-button{padding:7px 8px}.team-header-button span{display:none}.team-form-grid{grid-template-columns:1fr}.team-card,.invite-card{grid-template-columns:40px minmax(0,1fr);align-items:start}.team-avatar{width:40px;height:40px}.team-card-actions,.team-member-controls{grid-column:2;justify-content:flex-start;flex-wrap:wrap}.assignment-control{grid-template-columns:1fr}.assignment-control select{width:100%}.team-hero{padding:18px}.team-hero h2{font-size:20px}.team-count{min-width:64px}}
 
-.field-optional{font-size:8px;font-weight:650;color:#98a4b4;margin-left:4px}
-.consent-check{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:8px!important;background:#f6f9fd;border:1px solid #e1e8f1;border-radius:13px;padding:11px!important;margin:10px 0 12px!important}
-.consent-check input{min-height:0!important;width:16px!important;height:16px!important;margin:1px 0 0!important;flex:0 0 16px}
-.consent-check span{font-size:9px;line-height:1.45;color:#647286;font-weight:650}
 .invite-share-actions{display:flex!important;flex-direction:row!important;gap:6px;flex:0 0 auto}
