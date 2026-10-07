@@ -97,21 +97,40 @@ export function TeamPage({ companyId, currentUserId }: { companyId: string; curr
     setMessage('')
     setShareUrl('')
     try {
-      const { data, error: rpcError } = await supabase.rpc('criar_convite_equipe', {
-        p_empresa_id: companyId,
-        p_nome: name.trim() || null,
-        p_email: email.trim(),
-        p_papel: role,
+      const { data, error: invokeError } = await supabase.functions.invoke('zelo-invite-team', {
+        body: {
+          empresa_id: companyId,
+          nome: name.trim() || null,
+          email: email.trim(),
+          papel: role,
+          origin: window.location.origin,
+        },
       })
-      if (rpcError) throw rpcError
+      if (invokeError) throw invokeError
 
-      const result = data as { status?: string; token?: string; email?: string } | null
-      if (result?.status === 'adicionado') {
+      const response = data as {
+        error?: string
+        invite?: { status?: string; token?: string; email?: string }
+        email_sent?: boolean
+        email_error?: string
+        invite_url?: string
+        already_registered?: boolean
+      } | null
+
+      if (response?.error) throw new Error(response.error)
+
+      const result = response?.invite
+      if (response?.already_registered || result?.status === 'adicionado') {
         setMessage('A pessoa já tinha uma conta e foi adicionada à equipe.')
       } else if (result?.token) {
-        const url = inviteUrl(result.token)
+        const url = response?.invite_url || inviteUrl(result.token)
         setShareUrl(url)
-        setMessage('Convite criado. Compartilhe o link com a pessoa.')
+        if (response?.email_sent) {
+          setMessage(`Convite enviado para ${email.trim()}.`)
+        } else {
+          setMessage('Convite criado, mas o e-mail não pôde ser enviado. O link abaixo continua válido.')
+          if (response?.email_error) console.warn('Falha no envio do convite:', response.email_error)
+        }
       }
 
       setName('')
