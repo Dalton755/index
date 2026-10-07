@@ -8,15 +8,21 @@ type AssignableMember = {
   papel: string
 }
 
+type AssignmentStatus = 'pendente' | 'aceita' | 'recusada' | null
+
 export function AssignmentControl({
   companyId,
   orderId,
   currentAssignee,
+  assignmentStatus,
+  assignmentReason,
   onChanged,
 }: {
   companyId: string
   orderId: string
   currentAssignee: string | null
+  assignmentStatus: AssignmentStatus
+  assignmentReason?: string | null
   onChanged: () => Promise<void>
 }) {
   const [members, setMembers] = useState<AssignableMember[]>([])
@@ -31,10 +37,12 @@ export function AssignmentControl({
       .eq('ativo', true)
       .in('papel', ['admin', 'gestor', 'tecnico'])
       .order('nome')
+
     if (dbError) {
       setError(dbError.message)
       return
     }
+
     setMembers((data ?? []) as AssignableMember[])
   }, [companyId])
 
@@ -43,12 +51,14 @@ export function AssignmentControl({
   async function assign(value: string) {
     setBusy(true)
     setError('')
+
     try {
       const { error: dbError } = await supabase
         .from('ordens_servico')
         .update({ tecnico_responsavel: value || null })
         .eq('empresa_id', companyId)
         .eq('id', orderId)
+
       if (dbError) throw dbError
       await onChanged()
     } catch (err) {
@@ -58,16 +68,31 @@ export function AssignmentControl({
     }
   }
 
+  const statusLabel =
+    !currentAssignee ? 'Sem responsável'
+      : assignmentStatus === 'aceita' ? 'Aceita pelo técnico'
+        : assignmentStatus === 'recusada' ? 'Recusada pelo técnico'
+          : 'Aguardando resposta'
+
   return <article className="detail-card assignment-control">
     <div>
       <span>RESPONSÁVEL</span>
       <strong>Técnico do atendimento</strong>
-      <small>Ao atribuir, esta OS entra automaticamente na agenda do profissional.</small>
+      <small>Ao atribuir, o profissional recebe um Push e confirma se pode assumir a OS.</small>
     </div>
+
     <select disabled={busy} value={currentAssignee ?? ''} onChange={e => void assign(e.target.value)}>
       <option value="">Sem responsável</option>
-      {members.map(member => <option key={member.user_id} value={member.user_id}>{member.nome || member.email || 'Profissional'} — {member.papel === 'tecnico' ? 'Técnico' : member.papel === 'gestor' ? 'Gestor' : 'Administrador'}</option>)}
+      {members.map(member => <option key={member.user_id} value={member.user_id}>
+        {member.nome || member.email || 'Profissional'} — {member.papel === 'tecnico' ? 'Técnico' : member.papel === 'gestor' ? 'Gestor' : 'Administrador'}
+      </option>)}
     </select>
+
+    <div className={`assignment-manager-status ${assignmentStatus ?? 'none'}`}>
+      <strong>{statusLabel}</strong>
+      {assignmentStatus === 'recusada' && assignmentReason && <span>Motivo: {assignmentReason}</span>}
+    </div>
+
     {error && <div className="form-alert error">{error}</div>}
   </article>
 }
