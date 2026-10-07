@@ -26,7 +26,7 @@ function SignatureModal({ companyId, orderId, onClose, onCreated }: { companyId:
 }
 
 function OrderDetailView({ orderId, companyId, userId, customer, member, onBack, onChanged }: { orderId: string; companyId: string; userId: string; customer: Customer | undefined; member: Member; onBack: () => void; onChanged: () => Promise<void> }) {
-  const [data,setData]=useState<DetailData|null>(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(''); const [busy,setBusy]=useState(false); const [itemModal,setItemModal]=useState(false); const [paymentModal,setPaymentModal]=useState(false); const [guaranteeModal,setGuaranteeModal]=useState(false); const [signatureModal,setSignatureModal]=useState(false)
+  const [data,setData]=useState<DetailData|null>(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(''); const [busy,setBusy]=useState(false); const [itemModal,setItemModal]=useState(false); const [paymentModal,setPaymentModal]=useState(false); const [guaranteeModal,setGuaranteeModal]=useState(false); const [signatureModal,setSignatureModal]=useState(false); const [rejecting,setRejecting]=useState(false); const [rejectReason,setRejectReason]=useState('')
   const isTech=member.papel==='tecnico'; const canManage=member.papel==='admin'||member.papel==='gestor'; const canFinance=canManage||member.papel==='financeiro'; const canWork=canManage||isTech
   const load=useCallback(async()=>{setLoading(true);setError('');const [orderRes,itemRes,paymentRes,historyRes,attachmentRes,guaranteeRes]=await Promise.all([
     supabase.from('orde
