@@ -22,7 +22,7 @@ function OperationalApp({ session, member, company, reloadProfile }: { session: 
     {tab==='customers'&&canManage&&<Customers data={data} orderTotals={orderTotals} onNew={()=>setNewCustomer(true)}/>}
     {tab==='agenda'&&<Agenda data={data} customerNames={customerNames} showValue={showValue} onOpen={setSelectedOrderId}/>}
     {tab==='finance'&&canFinance&&<Finance data={data} customerNames={customerNames}/>}
-    {tab==='team'&&canManage&&<TeamPage companyId={company.id} currentUserId={session.user.id}/>}
+    {tab==='team'&&canManage&&<TeamPage companyId={company.id} companyName={company.nome} currentUserId={session.user.id}/>}
   </main>{canManage&&<button className="floating-add" onClick={()=>setNewOrder(true)} aria-label="Nova OS"><Icon name="plus"/></button>}<BottomNav tab={tab} onChange={setTab} member={member}/>{canManage&&newOrder&&<NewOrderModal companyId={company.id} userId={session.user.id} customers={data.customers} onClose={()=>setNewOrder(false)} onCreated={loadData}/>} {canManage&&newCustomer&&<NewCustomerModal companyId={company.id} userId={session.user.id} onClose={()=>setNewCustomer(false)} onCreated={loadData}/>}</div>
 }
 
