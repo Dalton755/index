@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from 'virtual:nethanel-app'
 import 'virtual:nethanel-styles.css'
 import './components/team.css'
+import './components/notifications.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
