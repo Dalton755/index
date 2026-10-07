@@ -1,4 +1,9 @@
-e === 'signup' && <label>Seu nome<input required value={name} onChange={e => setName(e.target.value)} placeholder="Como devemos chamar você?"/></label>}
+rong>Nethanel OS</strong><span>Ordem de serviço inteligente</span></div></div>
+    <div className="auth-copy"><span>OPERAÇÃO PROFISSIONAL</span><h1>{mode === 'login' ? 'Entre na sua operação.' : 'Crie sua conta.'}</h1><p>Clientes, orçamentos, agenda, execução e financeiro em um só lugar.</p></div>
+    <button className="google-button" type="button" onClick={loginGoogle} disabled={busy}><b>G</b> Continuar com Google</button>
+    <div className="divider"><span>ou</span></div>
+    <form onSubmit={submit}>
+      {mode === 'signup' && <label>Seu nome<input required value={name} onChange={e => setName(e.target.value)} placeholder="Como devemos chamar você?"/></label>}
       <label>E-mail<input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@empresa.com"/></label>
       <label>Senha<div className="password-field"><input required minLength={6} type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 6 caracteres"/><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Ocultar' : 'Ver'}</button></div></label>
       {error && <div className="form-alert error">{error}</div>}
@@ -45,39 +50,41 @@ function EmptyState({ title, text }: { title: string; text: string }) {
   return <div className="empty-state"><div className="empty-icon"><Icon name="orders"/></div><strong>{title}</strong><span>{text}</span></div>
 }
 
-function OrderCard({ order, customerName, onOpen }: { order: Order; customerName: string; onOpen?: () => void }) {
+function OrderCard({ order, customerName, onOpen, showValue = true }: { order: Order; customerName: string; onOpen?: () => void; showValue?: boolean }) {
   const schedule = order.agendado_inicio ? new Date(order.agendado_inicio) : null
   const meta = statusMeta[order.status] ?? statusMeta.rascunho
   return <article className={`order-card ${onOpen ? 'clickable-card' : ''}`} onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined} onKeyDown={e => { if (onOpen && (e.key === 'Enter' || e.key === ' ')) onOpen() }}>
     <div className="order-head"><div><span className="order-code">OS #{String(order.numero).padStart(4, '0')}</span><h3>{customerName}</h3></div><span className={`status ${meta.className}`}>{meta.label}</span></div>
     <p>{order.titulo}</p>
-    <div className="order-meta"><span><Icon name="calendar"/> {schedule ? dateFmt.format(schedule) : 'Sem data'}</span><span><Icon name="clock"/> {schedule ? timeFmt.format(schedule) : '--:--'}</span><strong>{money.format(Number(order.total ?? 0))}</strong></div>
+    <div className="order-meta"><span><Icon name="calendar"/> {schedule ? dateFmt.format(schedule) : 'Sem data'}</span><span><Icon name="clock"/> {schedule ? timeFmt.format(schedule) : '--:--'}</span>{showValue && <strong>{money.format(Number(order.total ?? 0))}</strong>}</div>
   </article>
 }
 
-function Dashboard({ member, data, customerNames, onNew, onAgenda, onOpen }: { member: Member; data: AppData; customerNames: Map<string, string>; onNew: () => void; onAgenda: () => void; onOpen: (id: string) => void }) {
+function Dashboard({ member, data, customerNames, onNew, onAgenda, onOpen }: { member: Member; data: AppData; customerNames: Map<string, string>; onNew?: () => void; onAgenda: () => void; onOpen: (id: string) => void }) {
   const todayKey = localDateKey(new Date())
   const month = new Date().getMonth(); const year = new Date().getFullYear()
   const activeOrders = data.orders.filter(o => !['concluida', 'cancelada'].includes(o.status))
   const todayOrders = data.orders.filter(o => o.agendado_inicio && localDateKey(o.agendado_inicio) === todayKey)
+  const dateLabel = fullDateFmt.format(new Date()).toUpperCase()
+  const firstName = member.nome?.split(' ')[0] || 'profissional'
+  const isTech = member.papel === 'tecnico'
+  const canManage = member.papel === 'admin' || member.papel === 'gestor'
+
+  if (isTech) {
+    const running = data.orders.filter(o => ['em_deslocamento','em_execucao','pausada'].includes(o.status)).length
+    const done = data.orders.filter(o => o.status === 'concluida').length
+    return <>
+      <section className="hero"><div><span className="eyebrow">{dateLabel}</span><h1>Olá, {firstName}.</h1><p>{todayOrders.length ? `${todayOrders.length} atendimento${todayOrders.length === 1 ? '' : 's'} na sua agenda de hoje.` : 'Nenhum atendimento agendado para hoje.'}</p></div></section>
+      <section className="metrics-grid"><div className="metric-card"><span>Minha agenda</span><strong>{todayOrders.length}</strong><small>serviços hoje</small></div><div className="metric-card"><span>Em execução</span><strong>{running}</strong><small>precisam de ação</small></div><div className="metric-card"><span>OS abertas</span><strong>{activeOrders.length}</strong><small>atribuídas a você</small></div><div className="metric-card accent"><span>Concluídas</span><strong>{done}</strong><small>no seu histórico</small></div></section>
+      <section className="section-block"><div className="section-title"><div><span>MINHA ROTA</span><h2>Agenda de hoje</h2></div><button onClick={onAgenda}>Ver agenda</button></div>{todayOrders.length ? <div className="stack">{todayOrders.map(o => <OrderCard key={o.id} order={o} customerName={customerNames.get(o.cliente_id) ?? 'Cliente'} showValue={false} onOpen={() => onOpen(o.id)}/>)}</div> : <EmptyState title="Agenda livre hoje" text="Quando uma OS for atribuída a você, ela aparecerá aqui."/>}</section>
+      <section className="section-block"><div className="section-title"><div><span>MEUS SERVIÇOS</span><h2>Precisam da sua atenção</h2></div></div>{activeOrders.length ? <div className="stack">{activeOrders.slice(0,4).map(o => <OrderCard key={o.id} order={o} customerName={customerNames.get(o.cliente_id) ?? 'Cliente'} showValue={false} onOpen={() => onOpen(o.id)}/>)}</div> : <EmptyState title="Nenhuma OS aberta" text="Você está em dia com seus atendimentos."/>}</section>
+    </>
+  }
+
   const paid = data.payments.filter(p => p.status === 'pago').reduce((sum, p) => sum + Number(p.valor), 0)
   const openTotal = data.orders.filter(o => o.status !== 'cancelada').reduce((sum, o) => sum + Number(o.total ?? 0), 0)
   const receivable = Math.max(openTotal - paid, 0)
   const monthPaid = data.payments.filter(p => { if (p.status !== 'pago') return false; const d = new Date(p.pago_em ?? p.created_at); return d.getMonth() === month && d.getFullYear() === year }).reduce((sum, p) => sum + Number(p.valor), 0)
-  const dateLabel = fullDateFmt.format(new Date()).toUpperCase()
-  const firstName = member.nome?.split(' ')[0] || 'profissional'
 
   return <>
-    <section className="hero"><div><span className="eyebrow">{dateLabel}</span><h1>Olá, {firstName}.</h1><p>{activeOrders.length ? `${activeOrders.length} OS precisam da sua atenção.` : 'Sua operação está sob controle.'}</p></div><button className="primary-action" onClick={onNew}><Icon name="plus"/> Nova OS</button></section>
-    <section className="metrics-grid"><div className="metric-card"><span>OS abertas</span><strong>{activeOrders.length}</strong><small>{todayOrders.length} para hoje</small></div><div className="metric-card"><span>A receber</span><strong>{money.format(receivable)}</strong><small>valor previsto</small></div><div className="metric-card"><span>Hoje</span><strong>{money.format(todayOrders.reduce((s,o)=>s+Number(o.total ?? 0),0))}</strong><small>{todayOrders.length} serviços</small></div><div className="metric-card accent"><span>Recebido no mês</span><strong>{money.format(monthPaid)}</strong><small>pagamentos confirmados</small></div></section>
-    <section className="section-block"><div className="section-title"><div><span>PRÓXIMOS SERVIÇOS</span><h2>Agenda de hoje</h2></div><button onClick={onAgenda}>Ver agenda</button></div>{todayOrders.length ? <div className="timeline">{todayOrders.slice(0,3).map((o, index) => { const schedule = new Date(o.agendado_inicio as string); const meta = statusMeta[o.status]; return <div className="timeline-item" key={o.id} onClick={() => onOpen(o.id)}><time>{timeFmt.format(schedule)}</time><div className="timeline-line"><i/></div><div className="timeline-content"><strong>{customerNames.get(o.cliente_id) ?? 'Cliente'}</strong><span>{o.titulo}</span><b className={index % 2 ? 'blue' : ''}>{meta.label}</b></div></div> })}</div> : <EmptyState title="Agenda livre hoje" text="Crie uma OS e escolha data e horário para aparecer aqui."/>}</section>
-    <section className="section-block"><div className="section-title"><div><span>ORDENS DE SERVIÇO</span><h2>Precisam da sua atenção</h2></div></div>{activeOrders.length ? <div className="stack">{activeOrders.slice(0,3).map(o => <OrderCard key={o.id} order={o} customerName={customerNames.get(o.cliente_id) ?? 'Cliente'} onOpen={() => onOpen(o.id)}/>)}</div> : <EmptyState title="Nenhuma OS aberta" text="Sua próxima ordem de serviço aparecerá aqui."/>}</section>
-  </>
-}
-
-function Orders({ data, customerNames, onNew, onOpen }: { data: AppData; customerNames: Map<string,string>; onNew: () => void; onOpen: (id: string) => void }) {
-  const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState<'all' | 'orcamento' | 'running' | 'done'>('all')
-  const visible = useMemo(() => data.orders.filter(o => {
-    const customer = customerNames.get(o.cliente_id) ?? ''
-    const matches = `OS ${o.numero} ${customer} ${o.titulo}`.toLo
+    <section className="hero"><div><span className="eyebrow">{dateLabel}</span><h1>Olá, {firstName}.</h1><p>{activeOrders.length ? `${activeOrders.length} OS precisam da sua atenção.` : 'Sua operação está sob controle.'}</p></div>{canManage && onNew && <button className="primary-action" onClick={onNew}><Icon nam
